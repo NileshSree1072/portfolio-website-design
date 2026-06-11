@@ -266,20 +266,31 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 6px; cursor: pointer; transition: all 0.2s ease;
     }
-    .node .icon { font-family: var(--font-px); font-size: 11px; color: var(--cyan); }
-    .node .label { font-size: 11px; color: var(--text); text-align: center; padding: 0 8px; }
+    .node .icon { font-family: var(--font-px); font-size: 11px; color: var(--cyan); pointer-events: none; }
+    .node .label { font-size: 11px; color: var(--text); text-align: center; padding: 0 8px; pointer-events: none; }
     .node.unlocked { box-shadow: 0 0 18px rgba(0,212,255,0.35); border-color: var(--cyan); }
     .node.locked { filter: grayscale(1) brightness(0.6); }
     .node.locked .icon { color: var(--locked); }
     .node:hover { transform: translateY(-6px) scale(1.04); }
-    .node .tip {
-      position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-      font-family: var(--font-px); font-size: 7px; color: #000; background: var(--gold);
-      padding: 6px 8px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s ease;
-      border: 2px solid #000;
-    }
-    .node:hover .tip { opacity: 1; }
     .branch .connector { width: 2px; height: 18px; background: var(--cyan); opacity: 0.4; }
+
+    /* Skill tooltip — rendered at body level (escapes node clip-path) */
+    #skill-tip {
+      position: fixed; z-index: 9999; pointer-events: none;
+      min-width: 180px; max-width: 240px;
+      background: #0a0e1a; border: 1px solid var(--cyan);
+      box-shadow: 0 0 18px rgba(0,212,255,0.4);
+      padding: 12px 14px; opacity: 0; transform: translateY(4px);
+      transition: opacity 0.1s ease, transform 0.1s ease;
+    }
+    #skill-tip.show { opacity: 1; transform: translateY(0); }
+    #skill-tip .tip-name { font-family: var(--font-px); font-size: 9px; color: var(--cyan); margin-bottom: 8px; letter-spacing: 1px; }
+    #skill-tip .tip-badge { display: inline-block; font-family: var(--font-px); font-size: 7px; color: #000; padding: 4px 6px; margin-bottom: 8px; letter-spacing: 1px; }
+    #skill-tip .tip-badge.mastered   { background: var(--green); }
+    #skill-tip .tip-badge.proficient { background: var(--cyan); }
+    #skill-tip .tip-badge.learning   { background: var(--gold); }
+    #skill-tip .tip-badge.locked     { background: var(--locked); color: var(--text); }
+    #skill-tip .tip-desc { font-family: var(--font-body); font-size: 12px; line-height: 1.5; color: var(--muted); }
 
     /* ============================================================
        PROJECTS — QUEST LOG
@@ -442,11 +453,11 @@
     <div class="player-card pixel-box reveal">
       <div class="ptag">PLAYER_01</div>
       <h1>NILESH</h1>
-      <div class="row"><span>CLASS</span><span class="cyan">Full-Stack Engineer / AI-ML Explorer</span></div>
-      <div class="row"><span>LEVEL</span><span class="gold">4 — Final Year</span></div>
-      <div class="row"><span>GUILD</span><span>B.Tech IT</span></div>
+      <div class="row"><span>CLASS</span><span class="cyan">FULL-STACK ENG. / AI-ML EXPLORER</span></div>
+      <div class="row"><span>LEVEL</span><span class="gold">LVL 4  ·  FINAL YEAR</span></div>
+      <div class="row"><span>GUILD</span><span>SSN CE  ·  B.TECH IT</span></div>
       <div class="xp-label">XP — PLACEMENT SEASON 2026</div>
-      <div class="xpbar"><i></i></div>
+      <div class="xpbar"><i id="hero-xp"></i></div>
       <button class="start-btn" onclick="document.getElementById('quests').scrollIntoView()">▶ START</button>
     </div>
   </section>
@@ -458,7 +469,7 @@
       <div class="section-head reveal">
         <div class="eyebrow">// SYSTEM</div>
         <h2>ABILITY TREE</h2>
-        <p>Hover a node to inspect proficiency. Unlocked nodes glow cyan.</p>
+        <p>&gt; HOVER NODE TO INSPECT SKILL DATA. CYAN NODES = UNLOCKED.</p>
       </div>
       <div class="tree reveal" id="tree"></div>
     </div>
@@ -473,7 +484,7 @@
       <div class="section-head reveal">
         <div class="eyebrow">// DOJO</div>
         <h2>TRAINING_GROUNDS</h2>
-        <p>Daily grind. Sharpening the blade.</p>
+        <p id="lc-feed-status">&gt; DAILY GRIND. SHARPENING THE BLADE.</p>
       </div>
 
       <div class="training-grid reveal">
@@ -494,13 +505,13 @@
             </svg>
             CODER CLASS: KNIGHT
           </div>
-          <div class="stat"><span class="k">RANK</span><span class="v">Knight III</span></div>
-          <div class="stat"><span class="k">PROBLEMS</span><span class="v">320 Solved</span></div>
-          <div class="stat"><span class="k">STREAK</span><span class="v hot">12 Days</span></div>
+          <div class="stat"><span class="k">RANK</span><span class="v" id="lc-rank">Knight III</span></div>
+          <div class="stat"><span class="k">PROBLEMS</span><span class="v" id="lc-problems">320 Solved</span></div>
+          <div class="stat"><span class="k">STREAK</span><span class="v hot" id="lc-streak">12 Days</span></div>
           <div class="stat"><span class="k">CONTEST</span><span class="v">1580 Rating</span></div>
           <div class="stat"><span class="k">ACCEPTANCE</span><span class="v">63.4%</span></div>
-          <div class="nextrank">NEXT RANK: GUARDIAN<br/>180 XP NEEDED</div>
-          <div class="xpbar"><i></i></div>
+          <div class="nextrank" id="lc-status">NEXT RANK: GUARDIAN<br/>180 XP NEEDED</div>
+          <div class="xpbar"><i id="lc-xp"></i></div>
           <a class="profile-btn" href="https://leetcode.com/u/nilesh_narayanan/" target="_blank" rel="noopener">VIEW PROFILE →</a>
         </div>
 
@@ -518,9 +529,9 @@
                 <rect x="7" y="6" width="2" height="3" fill="#03060f"/>
               </svg>
               <div class="diff">EASY</div>
-              <div class="count">127 / 150</div>
+              <div class="count" id="lc-easy-count">127 / 150</div>
               <div class="lab">CLEARED</div>
-              <div class="bar"><i></i></div>
+              <div class="bar"><i id="lc-easy-bar"></i></div>
             </div>
             <div class="mini med pixel-box">
               <svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
@@ -534,9 +545,9 @@
                 <rect x="2" y="13" width="3" height="2" fill="#a07814"/><rect x="11" y="13" width="3" height="2" fill="#a07814"/>
               </svg>
               <div class="diff">MEDIUM</div>
-              <div class="count">156 / 200</div>
+              <div class="count" id="lc-med-count">156 / 200</div>
               <div class="lab">IN PROGRESS</div>
-              <div class="bar"><i></i></div>
+              <div class="bar"><i id="lc-med-bar"></i></div>
             </div>
             <div class="mini hard pixel-box">
               <svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
@@ -548,9 +559,9 @@
                 <rect x="4" y="11" width="1" height="2" fill="#ff4757"/><rect x="7" y="11" width="2" height="3" fill="#ff4757"/><rect x="11" y="11" width="1" height="2" fill="#ff4757"/>
               </svg>
               <div class="diff">HARD</div>
-              <div class="count">37 / 80</div>
+              <div class="count" id="lc-hard-count">37 / 80</div>
               <div class="lab">ACTIVE GRIND</div>
-              <div class="bar"><i></i></div>
+              <div class="bar"><i id="lc-hard-bar"></i></div>
             </div>
           </div>
 
@@ -575,7 +586,7 @@
       <div class="section-head reveal">
         <div class="eyebrow">// MISSIONS</div>
         <h2>QUEST LOG</h2>
-        <p>Completed builds and active missions. Difficulty rated in stars.</p>
+        <p>&gt; COMPLETED BUILDS &amp; ACTIVE MISSIONS. DIFFICULTY RATED IN STARS.</p>
       </div>
       <div class="quests reveal" id="quests-grid"></div>
     </div>
@@ -587,7 +598,7 @@
       <div class="section-head reveal">
         <div class="eyebrow">// UNLOCKED</div>
         <h2>ACHIEVEMENTS</h2>
-        <p>Badges earned across the journey so far.</p>
+        <p>&gt; BADGES EARNED ACROSS THE JOURNEY SO FAR.</p>
       </div>
       <div class="feed reveal" id="feed"></div>
     </div>
@@ -607,7 +618,7 @@
           <form onsubmit="event.preventDefault(); this.reset(); alert('TRANSMISSION SENT ✓');">
             <div><label>$ name --your-handle</label><input required placeholder="player_name" /></div>
             <div><label>$ email --reply-to</label><input type="email" required placeholder="you@domain.com" /></div>
-            <div><label>$ message --payload</label><textarea rows="4" required placeholder="Type your message..."></textarea></div>
+            <div><label>$ message --payload</label><textarea rows="4" required placeholder="TYPE_MESSAGE . . ."></textarea></div>
             <button class="send" type="submit">[ SEND_TRANSMISSION ]</button>
           </form>
         </div>
@@ -666,35 +677,35 @@
     /* ---------- DATA: SKILLS ---------- */
     const SKILLS = [
       { cat: 'Languages', items: [
-        { name: 'Python', lvl: 'MASTERED', on: true },
-        { name: 'C++', lvl: 'PROFICIENT', on: true },
-        { name: 'Java', lvl: 'PROFICIENT', on: true },
-        { name: 'JavaScript', lvl: 'PROFICIENT', on: true },
+        { name: 'Python', lvl: 'MASTERED', on: true, desc: 'Primary weapon for backend, AI/ML and scripting.' },
+        { name: 'C++', lvl: 'PROFICIENT', on: true, desc: 'Used for robotics, DSA and performance-critical code.' },
+        { name: 'Java', lvl: 'PROFICIENT', on: true, desc: 'Backend services and Spring Boot applications.' },
+        { name: 'JavaScript', lvl: 'PROFICIENT', on: true, desc: 'Full-stack web logic across React and Node.' },
       ]},
       { cat: 'Backend', items: [
-        { name: 'FastAPI', lvl: 'MASTERED', on: true },
-        { name: 'Spring Boot', lvl: 'PROFICIENT', on: true },
-        { name: 'Redis', lvl: 'PROFICIENT', on: true },
-        { name: 'PostgreSQL', lvl: 'PROFICIENT', on: true },
+        { name: 'FastAPI', lvl: 'MASTERED', on: true, desc: 'High-throughput Python APIs with async endpoints.' },
+        { name: 'Spring Boot', lvl: 'PROFICIENT', on: true, desc: 'Concurrency-safe Java services with atomic ops.' },
+        { name: 'Redis', lvl: 'PROFICIENT', on: true, desc: 'Caching, rate limiting and atomic Lua scripting.' },
+        { name: 'PostgreSQL', lvl: 'PROFICIENT', on: true, desc: 'Relational data modelling and tuned queries.' },
       ]},
       { cat: 'Frontend', items: [
-        { name: 'React', lvl: 'PROFICIENT', on: true },
-        { name: 'Next.js', lvl: 'PROFICIENT', on: true },
-        { name: 'Tailwind', lvl: 'PROFICIENT', on: true },
+        { name: 'React', lvl: 'PROFICIENT', on: true, desc: 'Component-driven UIs with hooks and state.' },
+        { name: 'Next.js', lvl: 'PROFICIENT', on: true, desc: 'Full-stack apps with SSR and server actions.' },
+        { name: 'Tailwind', lvl: 'PROFICIENT', on: true, desc: 'Utility-first styling for rapid UI builds.' },
       ]},
       { cat: 'DevOps', items: [
-        { name: 'AWS', lvl: 'LEARNING', on: true },
-        { name: 'Docker', lvl: 'PROFICIENT', on: true },
-        { name: 'Kubernetes', lvl: 'LOCKED', on: false },
+        { name: 'AWS', lvl: 'LEARNING', on: true, desc: 'Deploying and scaling cloud infrastructure.' },
+        { name: 'Docker', lvl: 'PROFICIENT', on: true, desc: 'Containerizing services for reproducible deploys.' },
+        { name: 'Kubernetes', lvl: 'LOCKED', on: false, desc: 'Orchestration skill not yet unlocked.' },
       ]},
       { cat: 'AI / ML', items: [
-        { name: 'LangChain', lvl: 'PROFICIENT', on: true },
-        { name: 'FAISS / RAG', lvl: 'PROFICIENT', on: true },
-        { name: 'PyTorch', lvl: 'LEARNING', on: true },
+        { name: 'LangChain', lvl: 'PROFICIENT', on: true, desc: 'Building RAG pipelines and LLM-powered apps.' },
+        { name: 'FAISS / RAG', lvl: 'PROFICIENT', on: true, desc: 'Vector search over documents for retrieval Q&A.' },
+        { name: 'PyTorch', lvl: 'LEARNING', on: true, desc: 'Training and fine-tuning neural networks.' },
       ]},
       { cat: 'Robotics', items: [
-        { name: 'ROS', lvl: 'PROFICIENT', on: true },
-        { name: 'Embedded C', lvl: 'PROFICIENT', on: true },
+        { name: 'ROS', lvl: 'PROFICIENT', on: true, desc: 'Robot control and autonomous navigation stacks.' },
+        { name: 'Embedded C', lvl: 'PROFICIENT', on: true, desc: 'Low-level firmware for microcontrollers.' },
       ]},
     ];
     document.getElementById('tree').innerHTML = SKILLS.map(b => `
@@ -702,12 +713,47 @@
         <div class="branch-title">${b.cat}</div>
         <div class="connector"></div>
         ${b.items.map(i => `
-          <div class="node ${i.on ? 'unlocked' : 'locked'}">
-            <div class="tip">${i.lvl}</div>
-            <div class="icon">${i.on ? '◆' : '🔒'}</div>
+          <div class="node ${i.on ? 'unlocked' : 'locked'}"
+               data-name="${i.name}" data-lvl="${i.lvl}" data-desc="${i.desc}">
+            <div class="icon">${i.on ? '◆' : 'X'}</div>
             <div class="label">${i.name}</div>
           </div>`).join('<div class="connector"></div>')}
       </div>`).join('');
+
+    /* ---------- SKILL NODE TOOLTIP ---------- */
+    (function skillTip() {
+      const tip = document.createElement('div');
+      tip.id = 'skill-tip';
+      tip.innerHTML = '<div class="tip-name"></div><div class="tip-badge"></div><div class="tip-desc"></div>';
+      document.body.appendChild(tip);
+      const nameEl = tip.querySelector('.tip-name');
+      const badgeEl = tip.querySelector('.tip-badge');
+      const descEl = tip.querySelector('.tip-desc');
+
+      function place(e) {
+        const pad = 14;
+        let x = e.clientX + 16, y = e.clientY + 16;
+        const r = tip.getBoundingClientRect();
+        if (x + r.width + pad > window.innerWidth) x = e.clientX - r.width - 16;
+        if (y + r.height + pad > window.innerHeight) y = e.clientY - r.height - 16;
+        tip.style.left = Math.max(pad, x) + 'px';
+        tip.style.top = Math.max(pad, y) + 'px';
+      }
+
+      document.querySelectorAll('.node').forEach(node => {
+        node.addEventListener('mouseenter', (e) => {
+          const lvl = node.dataset.lvl || '';
+          nameEl.textContent = node.dataset.name || '';
+          badgeEl.textContent = lvl;
+          badgeEl.className = 'tip-badge ' + lvl.toLowerCase();
+          descEl.textContent = node.dataset.desc || '[ NO DATA FOUND ]';
+          place(e);
+          tip.classList.add('show');
+        });
+        node.addEventListener('mousemove', place);
+        node.addEventListener('mouseleave', () => tip.classList.remove('show'));
+      });
+    })();
 
     /* ---------- DATA: QUESTS ---------- */
     const QUESTS = [
@@ -741,6 +787,95 @@
         <div class="info"><h4>${a.t}</h4><span>${a.org}</span></div>
         <div class="date">${a.date}</div>
       </div>`).join('');
+
+    /* ---------- LIVE LEETCODE STATS ---------- */
+    (function leetcode() {
+      const USERNAME = 'nilesh_sree';
+      const status = document.getElementById('lc-feed-status');
+      const $ = id => document.getElementById(id);
+
+      // Loading state
+      status.textContent = 'FETCHING DATA . . .';
+
+      const setFill = (el, pct) => { if (el) el.style.width = Math.max(0, Math.min(100, pct)) + '%'; };
+
+      function render(d) {
+        // d: { easy, easyTotal, med, medTotal, hard, hardTotal, total, ranking, streak }
+        $('lc-easy-count').textContent = `${d.easy} / ${d.easyTotal}`;
+        $('lc-med-count').textContent  = `${d.med} / ${d.medTotal}`;
+        $('lc-hard-count').textContent = `${d.hard} / ${d.hardTotal}`;
+        setFill($('lc-easy-bar'), d.easyTotal ? (d.easy / d.easyTotal) * 100 : 0);
+        setFill($('lc-med-bar'),  d.medTotal  ? (d.med  / d.medTotal)  * 100 : 0);
+        setFill($('lc-hard-bar'), d.hardTotal ? (d.hard / d.hardTotal) * 100 : 0);
+
+        if (d.ranking) $('lc-rank').textContent = 'RANK #' + d.ranking;
+        $('lc-problems').textContent = d.total + ' Solved';
+        if (d.streak != null) $('lc-streak').textContent = d.streak + ' Days';
+
+        const xpPct = Math.min(100, (d.total / 500) * 100);
+        setFill($('lc-xp'), xpPct);
+        setFill($('hero-xp'), xpPct);
+
+        status.textContent = '> DAILY GRIND. SHARPENING THE BLADE.';
+      }
+
+      function offline() {
+        status.textContent = 'API UNREACHABLE — OFFLINE MODE';
+      }
+
+      // Try direct LeetCode GraphQL first, fall back to public proxy.
+      const query = `query getUserStats($username: String!) {
+        matchedUser(username: $username) {
+          submitStats { acSubmissionNum { difficulty count } }
+          userCalendar { streak totalActiveDays }
+          profile { ranking reputation }
+        }
+        allQuestionsCount { difficulty count }
+      }`;
+
+      fetch('https://leetcode.com/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: { username: USERNAME } })
+      })
+        .then(r => { if (!r.ok) throw new Error('graphql ' + r.status); return r.json(); })
+        .then(json => {
+          const u = json && json.data && json.data.matchedUser;
+          if (!u) throw new Error('no matchedUser');
+          const ac = {};
+          u.submitStats.acSubmissionNum.forEach(s => { ac[s.difficulty] = s.count; });
+          const all = {};
+          json.data.allQuestionsCount.forEach(s => { all[s.difficulty] = s.count; });
+          const easy = ac.Easy || 0, med = ac.Medium || 0, hard = ac.Hard || 0;
+          render({
+            easy, med, hard,
+            easyTotal: all.Easy || 0, medTotal: all.Medium || 0, hardTotal: all.Hard || 0,
+            total: easy + med + hard,
+            ranking: u.profile && u.profile.ranking,
+            streak: u.userCalendar && u.userCalendar.streak
+          });
+        })
+        .catch(err => {
+          console.log('[v0] LeetCode GraphQL failed, trying proxy:', err.message);
+          // Fallback proxy returns aggregate JSON with per-difficulty totals
+          fetch('https://alfa-leetcode-api.onrender.com/userProfile/' + USERNAME)
+            .then(r => { if (!r.ok) throw new Error('proxy ' + r.status); return r.json(); })
+            .then(p => {
+              if (p.errors) throw new Error('proxy error');
+              render({
+                easy: p.easySolved || 0, med: p.mediumSolved || 0, hard: p.hardSolved || 0,
+                easyTotal: p.totalEasy || 0, medTotal: p.totalMedium || 0, hardTotal: p.totalHard || 0,
+                total: p.totalSolved || ((p.easySolved||0)+(p.mediumSolved||0)+(p.hardSolved||0)),
+                ranking: p.ranking,
+                streak: p.streak
+              });
+            })
+            .catch(err2 => {
+              console.log('[v0] LeetCode proxy failed:', err2.message);
+              offline(); // keep placeholder values silently
+            });
+        });
+    })();
   </script>
 
   <!-- ============================================================
