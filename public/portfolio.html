@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NILESH // PLAYER_01</title>
+  <meta name="description" content="Gamified RPG portfolio of Nilesh — Full-Stack Engineer & AI/ML Explorer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       TOKENS
+    ============================================================ */
+    :root {
+      --bg:        #0a0e1a;
+      --bg-2:      #0c1124;
+      --card:      #1a0a2e;
+      --card-2:    #150a26;
+      --cyan:      #00d4ff;
+      --gold:      #f5c518;
+      --green:     #39ff7a;
+      --text:      #cdd6f4;
+      --muted:     #7b86a8;
+      --border:    #2a2350;
+      --locked:    #2c3350;
+      --px:        4px; /* pixel border thickness */
+      --font-px:   'Press Start 2P', monospace;
+      --font-body: 'Inter', system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--bg); scroll-padding-top: 80px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    ::selection { background: var(--cyan); color: #000; }
+
+    .px { font-family: var(--font-px); line-height: 1.5; }
+    .cyan { color: var(--cyan); }
+    .gold { color: var(--gold); }
+    .green { color: var(--green); }
+
+    /* Pixel border helper (hard-edged box shadow stack) */
+    .pixel-box {
+      position: relative;
+      background: var(--card);
+      border: var(--px) solid #000;
+      box-shadow:
+        0 0 0 var(--px) var(--border),
+        8px 8px 0 0 rgba(0,0,0,0.6);
+    }
+
+    /* ============================================================
+       LOADING SCREEN
+    ============================================================ */
+    #loader {
+      position: fixed; inset: 0; z-index: 1000;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 28px;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+    #loader.done { opacity: 0; visibility: hidden; }
+    #loader .title { font-size: 18px; color: var(--cyan); letter-spacing: 2px; }
+    #loader .bar-wrap {
+      width: min(360px, 80vw); height: 26px;
+      border: var(--px) solid #000;
+      box-shadow: 0 0 0 var(--px) var(--cyan);
+      background: #050811; padding: 4px;
+    }
+    #loader .bar { height: 100%; width: 0%; background: var(--cyan); transition: width 0.1s linear; }
+    #loader .pct { font-family: var(--font-px); font-size: 10px; color: var(--gold); }
+
+    /* ============================================================
+       NAVBAR
+    ============================================================ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px clamp(16px, 4vw, 48px);
+      background: rgba(10,14,26,0.72);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--border);
+    }
+    nav .brand { font-family: var(--font-px); font-size: 12px; color: var(--gold); }
+    nav .links { display: flex; gap: 4px; }
+    nav .links a {
+      font-family: var(--font-px); font-size: 9px; color: var(--muted);
+      padding: 10px 12px; border: 2px solid transparent;
+      transition: all 0.15s ease;
+    }
+    nav .links a:hover { color: var(--cyan); border-color: var(--cyan); }
+    nav .xp {
+      font-family: var(--font-px); font-size: 9px; color: var(--gold);
+      display: flex; align-items: center; gap: 8px;
+    }
+    nav .xp .xp-bar { width: 70px; height: 10px; background: #050811; border: 2px solid var(--border); padding: 1px; }
+    nav .xp .xp-fill { height: 100%; width: 5%; background: var(--gold); transition: width 0.2s ease; }
+    .nav-toggle { display: none; background: none; border: 2px solid var(--cyan); color: var(--cyan); font-family: var(--font-px); font-size: 10px; padding: 8px 10px; cursor: pointer; }
+
+    /* ============================================================
+       LAYOUT / SECTIONS
+    ============================================================ */
+    section { padding: clamp(64px, 10vh, 120px) clamp(16px, 5vw, 64px); position: relative; }
+    .section-head { text-align: center; margin-bottom: 56px; }
+    .section-head .eyebrow { font-family: var(--font-px); font-size: 10px; color: var(--gold); letter-spacing: 2px; }
+    .section-head h2 { font-family: var(--font-px); font-size: clamp(18px, 3vw, 30px); color: var(--cyan); margin-top: 16px; text-shadow: 0 0 18px rgba(0,212,255,0.4); }
+    .section-head p { color: var(--muted); max-width: 540px; margin: 16px auto 0; font-size: 15px; }
+    .container { max-width: 1120px; margin: 0 auto; }
+
+    /* Reveal animation */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    #hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding-top: 90px; overflow: hidden;
+    }
+    /* Parallax cityscape layers */
+    .city {
+      position: absolute; left: -5%; right: -5%; bottom: 0;
+      height: 60%; pointer-events: none; will-change: transform;
+      background-repeat: repeat-x; background-position: bottom;
+      image-rendering: pixelated;
+    }
+    .city-1 { z-index: 1; opacity: 0.35; background-image:
+      linear-gradient(to top, #10183a 0%, transparent 100%);
+      height: 45%; }
+    .city-2 { z-index: 2; height: 32%; opacity: 0.85;
+      background: repeating-linear-gradient(90deg,
+        #131c40 0 38px, transparent 38px 56px,
+        #182250 56px 96px, transparent 96px 120px);
+      -webkit-mask-image: linear-gradient(to top, #000 30%, transparent 100%);
+      mask-image: linear-gradient(to top, #000 30%, transparent 100%);
+    }
+    .city-3 { z-index: 3; height: 20%; opacity: 1;
+      background: repeating-linear-gradient(90deg,
+        #1c2a5e 0 26px, transparent 26px 48px,
+        #24347a 48px 70px, transparent 70px 92px);
+      -webkit-mask-image: linear-gradient(to top, #000 40%, transparent 100%);
+      mask-image: linear-gradient(to top, #000 40%, transparent 100%);
+    }
+    /* Star field */
+    .stars { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+        radial-gradient(1px 1px at 60% 20%, #9fe9ff, transparent),
+        radial-gradient(1px 1px at 80% 60%, #fff, transparent),
+        radial-gradient(1px 1px at 35% 70%, #f5c518, transparent),
+        radial-gradient(1px 1px at 50% 50%, #fff, transparent),
+        radial-gradient(1px 1px at 90% 40%, #9fe9ff, transparent);
+      opacity: 0.6;
+    }
+
+    /* Three.js mount point */
+    #orb-canvas {
+      position: relative; z-index: 5;
+      width: min(440px, 86vw); height: min(440px, 86vw);
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Phase 1 placeholder (replaced in phase 2) */
+    #orb-canvas .orb-placeholder {
+      width: 60%; aspect-ratio: 1; border: 3px solid var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(0,212,255,0.4), inset 0 0 40px rgba(0,212,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-px); font-size: 9px; color: var(--cyan);
+      text-align: center; animation: spin 12s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Player card */
+    .player-card {
+      position: relative; z-index: 6;
+      width: min(420px, 92vw); margin-top: -10px;
+      padding: 26px 28px; text-align: left;
+    }
+    .player-card .ptag { font-family: var(--font-px); font-size: 11px; color: var(--gold); }
+    .player-card h1 { font-family: var(--font-px); font-size: 22px; color: #fff; margin: 14px 0 8px; }
+    .player-card .row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding: 5px 0; border-bottom: 1px dashed var(--border); }
+    .player-card .row span:last-child { color: var(--text); }
+    .player-card .xp-label { font-family: var(--font-px); font-size: 8px; color: var(--cyan); margin: 14px 0 6px; }
+    .player-card .xpbar { height: 16px; background: #050811; border: 2px solid var(--border); padding: 2px; }
+    .player-card .xpbar i { display: block; height: 100%; width: 78%; background: linear-gradient(90deg, var(--cyan), var(--gold)); }
+
+    .start-btn {
+      font-family: var(--font-px); font-size: 12px; color: #000;
+      background: var(--cyan); border: var(--px) solid #000;
+      box-shadow: 6px 6px 0 0 rgba(0,0,0,0.6);
+      padding: 16px 26px; margin-top: 22px; cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .start-btn:hover { animation: pulse 0.7s ease infinite; }
+    @keyframes pulse { 0%,100% { transform: translate(0,0); box-shadow: 6px 6px 0 0 rgba(0,0,0,0.6);} 50% { transform: translate(2px,2px); box-shadow: 3px 3px 0 0 rgba(0,0,0,0.6);} }
+
+    /* ============================================================
+       SKILLS — ABILITY TREE
+    ============================================================ */
+    .tree { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 28px; }
+    .branch { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    .branch .branch-title { font-family: var(--font-px); font-size: 10px; color: var(--gold); }
+    .node {
+      position: relative; width: 120px; height: 132px;
+      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+      background: var(--card); border: 2px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; cursor: pointer; transition: all 0.2s ease;
+    }
+    .node .icon { font-family: var(--font-px); font-size: 11px; color: var(--cyan); }
+    .node .label { font-size: 11px; color: var(--text); text-align: center; padding: 0 8px; }
+    .node.unlocked { box-shadow: 0 0 18px rgba(0,212,255,0.35); border-color: var(--cyan); }
+    .node.locked { filter: grayscale(1) brightness(0.6); }
+    .node.locked .icon { color: var(--locked); }
+    .node:hover { transform: translateY(-6px) scale(1.04); }
+    .node .tip {
+      position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      font-family: var(--font-px); font-size: 7px; color: #000; background: var(--gold);
+      padding: 6px 8px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s ease;
+      border: 2px solid #000;
+    }
+    .node:hover .tip { opacity: 1; }
+    .branch .connector { width: 2px; height: 18px; background: var(--cyan); opacity: 0.4; }
+
+    /* ============================================================
+       PROJECTS — QUEST LOG
+    ============================================================ */
+    .quests { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 28px; }
+    .quest {
+      padding: 22px; display: flex; flex-direction: column; gap: 12px;
+      transition: transform 0.15s ease;
+    }
+    .quest .qhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .quest h3 { font-family: var(--font-px); font-size: 12px; color: var(--cyan); line-height: 1.6; }
+    .quest .stars { position: static; font-size: 12px; color: var(--gold); letter-spacing: 1px; }
+    .quest p { font-size: 14px; color: var(--muted); min-height: 42px; }
+    .quest .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .quest .tag { font-family: var(--font-px); font-size: 7px; color: var(--gold); background: var(--card-2); border: 1px solid var(--border); padding: 5px 7px; }
+    .quest .qbtn { font-family: var(--font-px); font-size: 9px; color: #000; background: var(--gold); border: 2px solid #000; padding: 10px 12px; text-align: center; cursor: pointer; margin-top: auto; transition: transform 0.1s ease; }
+    .quest .qbtn:hover { transform: translate(2px,2px); }
+
+    /* ============================================================
+       ACHIEVEMENTS
+    ============================================================ */
+    .feed { display: flex; flex-direction: column; gap: 18px; max-width: 760px; margin: 0 auto; }
+    .ach { display: flex; align-items: center; gap: 18px; padding: 18px 22px; }
+    .ach .badge { width: 52px; height: 52px; flex-shrink: 0; background: var(--card-2); border: 2px solid var(--gold); display: flex; align-items: center; justify-content: center; font-family: var(--font-px); font-size: 14px; color: var(--gold); }
+    .ach .info h4 { font-family: var(--font-px); font-size: 11px; color: var(--text); margin-bottom: 6px; }
+    .ach .info span { font-size: 13px; color: var(--muted); }
+    .ach .date { margin-left: auto; font-family: var(--font-px); font-size: 8px; color: var(--cyan); white-space: nowrap; }
+
+    /* ============================================================
+       CONTACT — TERMINAL
+    ============================================================ */
+    .terminal {
+      max-width: 720px; margin: 0 auto; background: #03060f;
+      border: var(--px) solid #000; box-shadow: 0 0 0 var(--px) var(--green);
+      padding: 0; overflow: hidden; font-family: var(--font-px);
+    }
+    .terminal .bar { background: #0a1020; padding: 10px 14px; display: flex; gap: 8px; align-items: center; }
+    .terminal .bar i { width: 11px; height: 11px; display: inline-block; }
+    .terminal .bar .r { background: #ff5f56; } .terminal .bar .y { background: #ffbd2e; } .terminal .bar .g { background: #27c93f; }
+    .terminal .bar span { font-size: 8px; color: var(--muted); margin-left: 8px; }
+    .terminal .body { padding: 24px; color: var(--green); font-size: 10px; line-height: 2.2; }
+    .terminal .body .head { color: var(--cyan); margin-bottom: 14px; }
+    .terminal form { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+    .terminal label { display: block; font-size: 9px; color: var(--green); margin-bottom: 8px; }
+    .terminal input, .terminal textarea {
+      width: 100%; background: #060b16; border: 2px solid #14361f; color: var(--green);
+      font-family: var(--font-px); font-size: 10px; padding: 12px; outline: none;
+    }
+    .terminal input:focus, .terminal textarea:focus { border-color: var(--green); }
+    .terminal .send { align-self: flex-start; background: var(--green); color: #000; border: 2px solid #000; font-family: var(--font-px); font-size: 10px; padding: 12px 18px; cursor: pointer; }
+    .cursor { display: inline-block; width: 8px; height: 14px; background: var(--green); animation: blink 1s steps(2) infinite; vertical-align: middle; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .socials { display: flex; gap: 14px; justify-content: center; margin-top: 32px; }
+    .socials a { font-family: var(--font-px); font-size: 9px; color: var(--cyan); border: 2px solid var(--cyan); padding: 12px 16px; transition: all 0.15s ease; }
+    .socials a:hover { background: var(--cyan); color: #000; }
+
+    footer { text-align: center; padding: 32px; font-family: var(--font-px); font-size: 8px; color: var(--muted); border-top: 2px solid var(--border); }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 760px) {
+      nav .links { display: none; }
+      nav .links.open {
+        display: flex; flex-direction: column; position: absolute;
+        top: 100%; left: 0; right: 0; background: rgba(10,14,26,0.97);
+        padding: 12px; border-bottom: 2px solid var(--border);
+      }
+      .nav-toggle { display: block; }
+      nav .xp { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="title px">LOADING<span class="cursor"></span></div>
+    <div class="bar-wrap"><div class="bar" id="loadBar"></div></div>
+    <div class="pct" id="loadPct">0%</div>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <a class="brand" href="#hero">NILESH.EXE</a>
+    <button class="nav-toggle" id="navToggle">MENU</button>
+    <div class="links" id="navLinks">
+      <a href="#hero">HOME</a>
+      <a href="#skills">SKILLS</a>
+      <a href="#quests">QUESTS</a>
+      <a href="#achievements">ACHIEVEMENTS</a>
+      <a href="#contact">CO-OP</a>
+    </div>
+    <div class="xp">
+      <span>XP</span>
+      <div class="xp-bar"><div class="xp-fill" id="navXp"></div></div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="stars"></div>
+    <div class="city city-1" data-depth="0.06"></div>
+    <div class="city city-2" data-depth="0.12"></div>
+    <div class="city city-3" data-depth="0.2"></div>
+
+    <div id="orb-canvas">
+      <div class="orb-placeholder">[ 3D ORB<br/>LOADS<br/>PHASE 2 ]</div>
+    </div>
+
+    <div class="player-card pixel-box reveal">
+      <div class="ptag">PLAYER_01</div>
+      <h1>NILESH</h1>
+      <div class="row"><span>CLASS</span><span class="cyan">Full-Stack Engineer / AI-ML Explorer</span></div>
+      <div class="row"><span>LEVEL</span><span class="gold">4 — Final Year</span></div>
+      <div class="row"><span>GUILD</span><span>B.Tech IT</span></div>
+      <div class="xp-label">XP — PLACEMENT SEASON 2026</div>
+      <div class="xpbar"><i></i></div>
+      <button class="start-btn" onclick="document.getElementById('quests').scrollIntoView()">▶ START</button>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="eyebrow">// SYSTEM</div>
+        <h2>ABILITY TREE</h2>
+        <p>Hover a node to inspect proficiency. Unlocked nodes glow cyan.</p>
+      </div>
+      <div class="tree reveal" id="tree"></div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="quests" style="background:var(--bg-2);">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="eyebrow">// MISSIONS</div>
+        <h2>QUEST LOG</h2>
+        <p>Completed builds and active missions. Difficulty rated in stars.</p>
+      </div>
+      <div class="quests reveal" id="quests-grid"></div>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section id="achievements">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="eyebrow">// UNLOCKED</div>
+        <h2>ACHIEVEMENTS</h2>
+        <p>Badges earned across the journey so far.</p>
+      </div>
+      <div class="feed reveal" id="feed"></div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" style="background:var(--bg-2);">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="eyebrow">// NETWORK</div>
+        <h2>CO-OP INVITE</h2>
+      </div>
+      <div class="terminal reveal">
+        <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span>nilesh@portfolio: ~/contact</span></div>
+        <div class="body">
+          <div class="head">&gt; INITIATE_CONNECTION<span class="cursor"></span></div>
+          <form onsubmit="event.preventDefault(); this.reset(); alert('TRANSMISSION SENT ✓');">
+            <div><label>$ name --your-handle</label><input required placeholder="player_name" /></div>
+            <div><label>$ email --reply-to</label><input type="email" required placeholder="you@domain.com" /></div>
+            <div><label>$ message --payload</label><textarea rows="4" required placeholder="Type your message..."></textarea></div>
+            <button class="send" type="submit">[ SEND_TRANSMISSION ]</button>
+          </form>
+        </div>
+      </div>
+      <div class="socials reveal">
+        <a href="https://github.com" target="_blank" rel="noopener">[ GITHUB ]</a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener">[ LINKEDIN ]</a>
+        <a href="mailto:nilesh@example.com">[ EMAIL ]</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>© 2026 NILESH — PRESS START TO CONTINUE</footer>
+
+  <script>
+    /* ---------- LOADER ---------- */
+    (function () {
+      let p = 0;
+      const bar = document.getElementById('loadBar');
+      const pct = document.getElementById('loadPct');
+      const t = setInterval(() => {
+        p += Math.random() * 12;
+        if (p >= 100) { p = 100; clearInterval(t); setTimeout(() => document.getElementById('loader').classList.add('done'), 250); }
+        bar.style.width = p + '%';
+        pct.textContent = Math.floor(p) + '%';
+      }, 120);
+    })();
+
+    /* ---------- NAV TOGGLE ---------- */
+    document.getElementById('navToggle').addEventListener('click', () =>
+      document.getElementById('navLinks').classList.toggle('open'));
+
+    /* ---------- PARALLAX CITY ---------- */
+    document.addEventListener('mousemove', (e) => {
+      const cx = (e.clientX / window.innerWidth - 0.5);
+      document.querySelectorAll('.city').forEach(el => {
+        const d = parseFloat(el.dataset.depth) * 100;
+        el.style.transform = `translateX(${cx * d}px)`;
+      });
+    });
+
+    /* ---------- XP ON SCROLL ---------- */
+    const navXp = document.getElementById('navXp');
+    window.addEventListener('scroll', () => {
+      const max = document.body.scrollHeight - window.innerHeight;
+      const pctv = Math.min(100, (window.scrollY / max) * 100);
+      navXp.style.width = Math.max(5, pctv) + '%';
+    });
+
+    /* ---------- REVEAL OBSERVER ---------- */
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('in'); });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* ---------- DATA: SKILLS ---------- */
+    const SKILLS = [
+      { cat: 'Languages', items: [
+        { name: 'Python', lvl: 'MASTERED', on: true },
+        { name: 'C++', lvl: 'PROFICIENT', on: true },
+        { name: 'Java', lvl: 'PROFICIENT', on: true },
+        { name: 'JavaScript', lvl: 'PROFICIENT', on: true },
+      ]},
+      { cat: 'Backend', items: [
+        { name: 'FastAPI', lvl: 'MASTERED', on: true },
+        { name: 'Spring Boot', lvl: 'PROFICIENT', on: true },
+        { name: 'Redis', lvl: 'PROFICIENT', on: true },
+        { name: 'PostgreSQL', lvl: 'PROFICIENT', on: true },
+      ]},
+      { cat: 'Frontend', items: [
+        { name: 'React', lvl: 'PROFICIENT', on: true },
+        { name: 'Next.js', lvl: 'PROFICIENT', on: true },
+        { name: 'Tailwind', lvl: 'PROFICIENT', on: true },
+      ]},
+      { cat: 'DevOps', items: [
+        { name: 'AWS', lvl: 'LEARNING', on: true },
+        { name: 'Docker', lvl: 'PROFICIENT', on: true },
+        { name: 'Kubernetes', lvl: 'LOCKED', on: false },
+      ]},
+      { cat: 'AI / ML', items: [
+        { name: 'LangChain', lvl: 'PROFICIENT', on: true },
+        { name: 'FAISS / RAG', lvl: 'PROFICIENT', on: true },
+        { name: 'PyTorch', lvl: 'LEARNING', on: true },
+      ]},
+      { cat: 'Robotics', items: [
+        { name: 'ROS', lvl: 'PROFICIENT', on: true },
+        { name: 'Embedded C', lvl: 'PROFICIENT', on: true },
+      ]},
+    ];
+    document.getElementById('tree').innerHTML = SKILLS.map(b => `
+      <div class="branch">
+        <div class="branch-title">${b.cat}</div>
+        <div class="connector"></div>
+        ${b.items.map(i => `
+          <div class="node ${i.on ? 'unlocked' : 'locked'}">
+            <div class="tip">${i.lvl}</div>
+            <div class="icon">${i.on ? '◆' : '🔒'}</div>
+            <div class="label">${i.name}</div>
+          </div>`).join('<div class="connector"></div>')}
+      </div>`).join('');
+
+    /* ---------- DATA: QUESTS ---------- */
+    const QUESTS = [
+      { t:'ApartiBot', d:6, desc:'Autonomous delivery & security robot. Ranked 6th nationally.', tags:['C++','ROS'], link:'#' },
+      { t:'Insurance RAG Chatbot', d:5, desc:'Retrieval-augmented Q&A over policy documents.', tags:['LangChain','FAISS','FastAPI'], link:'#' },
+      { t:'URL Shortener', d:4, desc:'High-throughput shortener with JWT auth & caching.', tags:['FastAPI','Redis','Supabase','React'], link:'#' },
+      { t:'EzDelivery', d:5, desc:'Full-stack delivery platform with payments & cloud infra.', tags:['Next.js','MongoDB','AWS','Razorpay'], link:'#' },
+      { t:'PCB Panel ID Reader', d:4, desc:'Vision LLM reads panel IDs from PCB images.', tags:['FastAPI','React','Gemini Vision'], link:'#' },
+      { t:'Grid07 Assignment', d:5, desc:'Concurrency-safe system with atomic Lua ops.', tags:['Spring Boot','PostgreSQL','Redis','Lua'], link:'#' },
+    ];
+    const star = n => '★'.repeat(n) + '☆'.repeat(6-n);
+    document.getElementById('quests-grid').innerHTML = QUESTS.map(q => `
+      <div class="quest pixel-box">
+        <div class="qhead"><h3>${q.t}</h3><div class="stars">${'⭐'.repeat(Math.min(3, Math.ceil(q.d/2)))}</div></div>
+        <p>${q.desc}</p>
+        <div class="tags">${q.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <a class="qbtn" href="${q.link}" target="_blank" rel="noopener">VIEW QUEST →</a>
+      </div>`).join('');
+
+    /* ---------- DATA: ACHIEVEMENTS ---------- */
+    const ACH = [
+      { i:'🎓', t:'SSN College of Engineering', org:'B.Tech IT — Final Year', date:'2026' },
+      { i:'🏅', t:'PSG Polytechnic — 9.3 CGPA', org:'Diploma', date:'2023' },
+      { i:'⚔️', t:'ProCode Club — DSA Head', org:'Leadership', date:'2025' },
+      { i:'🚀', t:'SNUC Hacks 2026', org:'Hackathon', date:'2026' },
+      { i:'💼', t:'Grid07 Internship', org:'Backend Engineering', date:'2025' },
+    ];
+    document.getElementById('feed').innerHTML = ACH.map(a => `
+      <div class="ach pixel-box">
+        <div class="badge">${a.i}</div>
+        <div class="info"><h4>${a.t}</h4><span>${a.org}</span></div>
+        <div class="date">${a.date}</div>
+      </div>`).join('');
+  </script>
+</body>
+</html>
