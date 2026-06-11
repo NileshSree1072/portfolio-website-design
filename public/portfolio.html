@@ -210,6 +210,7 @@
     #orb-canvas {
       position: relative; z-index: 5; overflow: visible;
       width: min(460px, 88vw); height: min(460px, 88vw);
+      min-height: 420px;
       display: flex; align-items: center; justify-content: center;
       cursor: grab;
     }
@@ -391,6 +392,7 @@
     @media (max-width: 760px) {
       .training-grid { grid-template-columns: 1fr; }
       .battle .mini-row { grid-template-columns: 1fr; }
+      #orb-canvas { min-height: 320px; }
       nav .links { display: none; }
       nav .links.open {
         display: flex; flex-direction: column; position: absolute;
@@ -761,7 +763,7 @@
       if (!W || !H) { requestAnimationFrame(initOrb); return; }
 
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 1000);
+      const camera = new THREE.PerspectiveCamera(65, W / H, 0.1, 1000);
       camera.position.z = 8;
 
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -773,7 +775,7 @@
       const COLORS = { cyan: 0x00d4ff, gold: 0xf5c518, green: 0x39ff7a };
 
       // Core: low-poly wireframe icosahedron
-      const coreGeo = new THREE.IcosahedronGeometry(1.7, 1);
+      const coreGeo = new THREE.IcosahedronGeometry(2.2, 1);
       const wire = new THREE.LineSegments(
         new THREE.WireframeGeometry(coreGeo),
         new THREE.LineBasicMaterial({ color: COLORS.cyan, transparent: true, opacity: 0.85 })
@@ -782,7 +784,7 @@
 
       // Inner solid faceted glow
       const inner = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(1.2, 0),
+        new THREE.IcosahedronGeometry(1.43, 0),
         new THREE.MeshStandardMaterial({
           color: 0x0a1a3a, emissive: COLORS.cyan, emissiveIntensity: 0.35,
           metalness: 0.6, roughness: 0.3, flatShading: true,
@@ -806,17 +808,17 @@
       scene.add(orbitGroup);
       TECH.forEach((t, i) => {
         const m = new THREE.Mesh(
-          new THREE.SphereGeometry(0.16, 12, 12),
+          new THREE.SphereGeometry(0.18, 12, 12),
           new THREE.MeshBasicMaterial({ color: t.c })
         );
         const halo = new THREE.Mesh(
-          new THREE.SphereGeometry(0.26, 12, 12),
+          new THREE.SphereGeometry(0.29, 12, 12),
           new THREE.MeshBasicMaterial({ color: t.c, transparent: true, opacity: 0.18 })
         );
         m.add(halo);
         const g = new THREE.Group();
         g.add(m);
-        const radius = 1.8 + (i % 2) * 0.2;
+        const radius = 3.2 + (i % 2) * 0.2;
         // Distinct orbital tilt per sphere -> spherical shell, not a flat disc
         g.rotation.x = (i / TECH.length) * Math.PI * 0.9 + 0.3;
         g.rotation.y = i * (Math.PI / 5);
