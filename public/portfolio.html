@@ -20,6 +20,9 @@
       --cyan:      #00d4ff;
       --gold:      #f5c518;
       --green:     #39ff7a;
+      --lc-easy:   #00b894;
+      --lc-med:    #f5c518;
+      --lc-hard:   #ff4757;
       --text:      #cdd6f4;
       --muted:     #7b86a8;
       --border:    #2a2350;
@@ -256,6 +259,54 @@
     .quest .qbtn:hover { transform: translate(2px,2px); }
 
     /* ============================================================
+       TRAINING GROUNDS (LeetCode stats)
+    ============================================================ */
+    .training-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 28px; align-items: start; }
+    /* Left — warrior stats card */
+    .warrior { padding: 26px; display: flex; flex-direction: column; gap: 6px; }
+    .warrior .class-tag { display: flex; align-items: center; gap: 10px; font-family: var(--font-px); font-size: 9px; color: var(--gold); margin-bottom: 12px; }
+    .warrior .class-tag .sword { width: 22px; height: 22px; flex-shrink: 0; image-rendering: pixelated; }
+    .warrior .stat { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-px); font-size: 8px; padding: 11px 0; border-bottom: 1px dashed var(--border); }
+    .warrior .stat .k { color: var(--muted); letter-spacing: 1px; }
+    .warrior .stat .v { color: var(--text); }
+    .warrior .stat .v.hot { color: var(--gold); }
+    .warrior .nextrank { font-family: var(--font-px); font-size: 8px; color: var(--cyan); margin: 18px 0 8px; line-height: 1.8; }
+    .warrior .xpbar { height: 18px; background: #050811; border: 2px solid var(--border); padding: 2px; }
+    .warrior .xpbar i { display: block; height: 100%; width: 65%; background: linear-gradient(90deg, var(--cyan), #6ee7ff);
+      box-shadow: 0 0 12px rgba(0,212,255,0.7); animation: xpglow 2s ease-in-out infinite; }
+    @keyframes xpglow { 50% { box-shadow: 0 0 20px rgba(0,212,255,0.9); } }
+    .warrior .profile-btn { margin-top: 22px; align-self: flex-start; font-family: var(--font-px); font-size: 9px;
+      color: #000; background: var(--cyan); border: 2px solid #000; padding: 12px 16px; cursor: pointer; transition: transform 0.1s ease; }
+    .warrior .profile-btn:hover { transform: translate(2px, 2px); }
+    /* Right — battle record */
+    .battle { display: flex; flex-direction: column; gap: 20px; }
+    .battle .mini-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .battle .mini { padding: 18px 14px; text-align: center; display: flex; flex-direction: column; gap: 9px; align-items: center; }
+    .battle .mini .ico { width: 30px; height: 30px; image-rendering: pixelated; }
+    .battle .mini .diff { font-family: var(--font-px); font-size: 8px; letter-spacing: 1px; }
+    .battle .mini .count { font-family: var(--font-px); font-size: 13px; color: var(--text); }
+    .battle .mini .lab { font-family: var(--font-px); font-size: 6px; color: var(--muted); letter-spacing: 1px; }
+    .battle .mini .bar { width: 100%; height: 10px; background: #050811; border: 2px solid var(--border); padding: 1px; }
+    .battle .mini .bar i { display: block; height: 100%; }
+    .battle .mini.easy .diff { color: var(--lc-easy); } .battle .mini.easy .bar i { background: var(--lc-easy); width: 85%; }
+    .battle .mini.med .diff  { color: var(--lc-med); }  .battle .mini.med .bar i  { background: var(--lc-med); width: 78%; }
+    .battle .mini.hard .diff { color: var(--lc-hard); } .battle .mini.hard .bar i { background: var(--lc-hard); width: 46%; }
+    /* Recent battles terminal */
+    .battle .recent { background: #03060f; border: var(--px) solid #000; box-shadow: 0 0 0 var(--px) var(--cyan); overflow: hidden; }
+    .battle .recent .rhead { background: #0a1020; padding: 10px 14px; font-family: var(--font-px); font-size: 8px; color: var(--cyan); }
+    .battle .recent .rbody { padding: 8px 0; }
+    .battle .recent .rrow { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 12px; align-items: center;
+      font-family: var(--font-mono, 'Courier New', monospace); font-size: 12px; padding: 8px 16px; transition: background 0.12s ease; }
+    .battle .recent .rrow:hover { background: rgba(0,212,255,0.06); }
+    .battle .recent .rrow .chk { color: var(--lc-easy); }
+    .battle .recent .rrow .name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .battle .recent .rrow .lvl { font-family: var(--font-px); font-size: 6px; letter-spacing: 1px; }
+    .battle .recent .rrow .xp { font-family: var(--font-px); font-size: 7px; color: var(--gold); white-space: nowrap; }
+    .battle .recent .rrow.easy .lvl { color: var(--lc-easy); }
+    .battle .recent .rrow.med .lvl  { color: var(--lc-med); }
+    .battle .recent .rrow.hard .lvl { color: var(--lc-hard); }
+
+    /* ============================================================
        ACHIEVEMENTS
     ============================================================ */
     .feed { display: flex; flex-direction: column; gap: 18px; max-width: 760px; margin: 0 auto; }
@@ -299,6 +350,8 @@
        RESPONSIVE
     ============================================================ */
     @media (max-width: 760px) {
+      .training-grid { grid-template-columns: 1fr; }
+      .battle .mini-row { grid-template-columns: 1fr; }
       nav .links { display: none; }
       nav .links.open {
         display: flex; flex-direction: column; position: absolute;
@@ -325,6 +378,7 @@
     <div class="links" id="navLinks">
       <a href="#hero">HOME</a>
       <a href="#skills">SKILLS</a>
+      <a href="#training">TRAINING</a>
       <a href="#quests">QUESTS</a>
       <a href="#achievements">ACHIEVEMENTS</a>
       <a href="#contact">CO-OP</a>
@@ -366,6 +420,111 @@
         <p>Hover a node to inspect proficiency. Unlocked nodes glow cyan.</p>
       </div>
       <div class="tree reveal" id="tree"></div>
+    </div>
+  </section>
+
+  <!-- TRAINING GROUNDS (LeetCode stats — placeholder data) -->
+  <!-- TODO: Replace placeholder data with live LeetCode stats
+       Public GraphQL endpoint: https://leetcode.com/graphql
+       Query: userPublicProfile + userProblemsSolved for username "nilesh_narayanan" -->
+  <section id="training">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="eyebrow">// DOJO</div>
+        <h2>TRAINING_GROUNDS</h2>
+        <p>Daily grind. Sharpening the blade.</p>
+      </div>
+
+      <div class="training-grid reveal">
+        <!-- LEFT: Warrior stats card -->
+        <div class="warrior pixel-box">
+          <div class="class-tag">
+            <svg class="sword" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+              <rect x="9" y="1" width="2" height="2" fill="#cdd6f4"/>
+              <rect x="8" y="2" width="2" height="2" fill="#cdd6f4"/>
+              <rect x="7" y="3" width="2" height="2" fill="#cdd6f4"/>
+              <rect x="6" y="4" width="2" height="2" fill="#cdd6f4"/>
+              <rect x="5" y="5" width="2" height="2" fill="#cdd6f4"/>
+              <rect x="4" y="6" width="2" height="2" fill="#cdd6f4"/>
+              <rect x="2" y="8" width="4" height="2" fill="#f5c518"/>
+              <rect x="3" y="7" width="2" height="2" fill="#cdd6f4"/>
+              <rect x="1" y="9" width="2" height="2" fill="#a07814"/>
+              <rect x="3" y="9" width="2" height="3" fill="#a07814"/>
+            </svg>
+            CODER CLASS: KNIGHT
+          </div>
+          <div class="stat"><span class="k">RANK</span><span class="v">Knight III</span></div>
+          <div class="stat"><span class="k">PROBLEMS</span><span class="v">320 Solved</span></div>
+          <div class="stat"><span class="k">STREAK</span><span class="v hot">12 Days</span></div>
+          <div class="stat"><span class="k">CONTEST</span><span class="v">1580 Rating</span></div>
+          <div class="stat"><span class="k">ACCEPTANCE</span><span class="v">63.4%</span></div>
+          <div class="nextrank">NEXT RANK: GUARDIAN<br/>180 XP NEEDED</div>
+          <div class="xpbar"><i></i></div>
+          <a class="profile-btn" href="https://leetcode.com/u/nilesh_narayanan/" target="_blank" rel="noopener">VIEW PROFILE →</a>
+        </div>
+
+        <!-- RIGHT: Battle record -->
+        <div class="battle">
+          <div class="mini-row">
+            <div class="mini easy pixel-box">
+              <svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+                <rect x="3" y="2" width="10" height="2" fill="#00b894"/>
+                <rect x="2" y="4" width="12" height="6" fill="#00b894"/>
+                <rect x="3" y="10" width="10" height="2" fill="#00b894"/>
+                <rect x="5" y="12" width="6" height="2" fill="#00b894"/>
+                <rect x="7" y="14" width="2" height="1" fill="#00b894"/>
+                <rect x="6" y="5" width="4" height="2" fill="#03060f"/>
+                <rect x="7" y="6" width="2" height="3" fill="#03060f"/>
+              </svg>
+              <div class="diff">EASY</div>
+              <div class="count">127 / 150</div>
+              <div class="lab">CLEARED</div>
+              <div class="bar"><i></i></div>
+            </div>
+            <div class="mini med pixel-box">
+              <svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+                <rect x="12" y="1" width="2" height="2" fill="#f5c518"/>
+                <rect x="2" y="1" width="2" height="2" fill="#f5c518"/>
+                <rect x="3" y="3" width="2" height="2" fill="#f5c518"/><rect x="11" y="3" width="2" height="2" fill="#f5c518"/>
+                <rect x="5" y="5" width="2" height="2" fill="#f5c518"/><rect x="9" y="5" width="2" height="2" fill="#f5c518"/>
+                <rect x="7" y="7" width="2" height="2" fill="#f5c518"/>
+                <rect x="5" y="9" width="2" height="2" fill="#f5c518"/><rect x="9" y="9" width="2" height="2" fill="#f5c518"/>
+                <rect x="3" y="11" width="2" height="2" fill="#a07814"/><rect x="11" y="11" width="2" height="2" fill="#a07814"/>
+                <rect x="2" y="13" width="3" height="2" fill="#a07814"/><rect x="11" y="13" width="3" height="2" fill="#a07814"/>
+              </svg>
+              <div class="diff">MEDIUM</div>
+              <div class="count">156 / 200</div>
+              <div class="lab">IN PROGRESS</div>
+              <div class="bar"><i></i></div>
+            </div>
+            <div class="mini hard pixel-box">
+              <svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+                <rect x="4" y="2" width="8" height="2" fill="#ff4757"/>
+                <rect x="3" y="4" width="10" height="5" fill="#ff4757"/>
+                <rect x="5" y="5" width="2" height="2" fill="#03060f"/><rect x="9" y="5" width="2" height="2" fill="#03060f"/>
+                <rect x="7" y="7" width="2" height="2" fill="#03060f"/>
+                <rect x="4" y="9" width="2" height="2" fill="#ff4757"/><rect x="7" y="9" width="2" height="2" fill="#ff4757"/><rect x="10" y="9" width="2" height="2" fill="#ff4757"/>
+                <rect x="4" y="11" width="1" height="2" fill="#ff4757"/><rect x="7" y="11" width="2" height="3" fill="#ff4757"/><rect x="11" y="11" width="1" height="2" fill="#ff4757"/>
+              </svg>
+              <div class="diff">HARD</div>
+              <div class="count">37 / 80</div>
+              <div class="lab">ACTIVE GRIND</div>
+              <div class="bar"><i></i></div>
+            </div>
+          </div>
+
+          <div class="recent">
+            <div class="rhead">&gt; RECENT_ACTIVITY</div>
+            <div class="rbody">
+              <div class="rrow easy"><span class="chk">✓</span><span class="name">Two Sum</span><span class="lvl">EASY</span><span class="xp">+10 XP</span></div>
+              <div class="rrow med"><span class="chk">✓</span><span class="name">LRU Cache</span><span class="lvl">MEDIUM</span><span class="xp">+25 XP</span></div>
+              <div class="rrow hard"><span class="chk">✓</span><span class="name">Word Break II</span><span class="lvl">HARD</span><span class="xp">+50 XP</span></div>
+              <div class="rrow hard"><span class="chk">✓</span><span class="name">Sliding Window Maximum</span><span class="lvl">HARD</span><span class="xp">+50 XP</span></div>
+              <div class="rrow med"><span class="chk">✓</span><span class="name">Top K Frequent Elements</span><span class="lvl">MEDIUM</span><span class="xp">+25 XP</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
