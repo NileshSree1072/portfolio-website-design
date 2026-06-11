@@ -10,6 +10,45 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     /* ============================================================
+       CUSTOM PIXEL CROSSHAIR CURSOR
+    ============================================================ */
+    /* Default: crosshair reticle (center 2x2 dot + 4 ticks, dark outline) */
+    *, *::before, *::after {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' shape-rendering='crispEdges'%3E%3Cg fill='%23003344'%3E%3Crect x='10' y='1' width='4' height='6'/%3E%3Crect x='10' y='17' width='4' height='6'/%3E%3Crect x='1' y='10' width='6' height='4'/%3E%3Crect x='17' y='10' width='6' height='4'/%3E%3Crect x='9' y='9' width='6' height='6'/%3E%3C/g%3E%3Cg fill='%2300d4ff'%3E%3Crect x='11' y='2' width='2' height='5'/%3E%3Crect x='11' y='17' width='2' height='5'/%3E%3Crect x='2' y='11' width='5' height='2'/%3E%3Crect x='17' y='11' width='5' height='2'/%3E%3Crect x='11' y='11' width='2' height='2'/%3E%3C/g%3E%3C/svg%3E") 12 12, crosshair;
+    }
+    /* Interactive: crosshair with cyan diamond center ("target locked") */
+    a, button, [role="button"], .pixel-box, .player-card, .start-btn, .profile-btn,
+    .quest, .qbtn, .node, .nav a, .mini, .send, .nav-toggle, label[for] {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' shape-rendering='crispEdges'%3E%3Cg fill='%23003344'%3E%3Crect x='10' y='0' width='4' height='6'/%3E%3Crect x='10' y='18' width='4' height='6'/%3E%3Crect x='0' y='10' width='6' height='4'/%3E%3Crect x='18' y='10' width='6' height='4'/%3E%3Crect x='8' y='8' width='8' height='8'/%3E%3C/g%3E%3Cg fill='%2300d4ff'%3E%3Crect x='11' y='1' width='2' height='5'/%3E%3Crect x='11' y='18' width='2' height='5'/%3E%3Crect x='1' y='11' width='5' height='2'/%3E%3Crect x='18' y='11' width='5' height='2'/%3E%3Crect x='11' y='9' width='2' height='6'/%3E%3Crect x='9' y='11' width='6' height='2'/%3E%3Crect x='10' y='10' width='4' height='4'/%3E%3C/g%3E%3C/svg%3E") 12 12, pointer !important;
+    }
+    /* Selectable text: cyan caret */
+    input, textarea {
+      cursor: text;
+      caret-color: var(--cyan, #00d4ff);
+    }
+    /* Click burst effect */
+    .click-burst { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 99999; }
+    .click-burst span {
+      position: absolute; width: 5px; height: 5px; background: #00d4ff;
+      image-rendering: pixelated; box-shadow: 0 0 4px rgba(0,212,255,0.8);
+      animation: burst-fly 300ms ease-out forwards;
+    }
+    .click-burst span:nth-child(1) { --bx: 14px;  --by: -14px; }
+    .click-burst span:nth-child(2) { --bx: -14px; --by: -14px; }
+    .click-burst span:nth-child(3) { --bx: 14px;  --by: 14px; }
+    .click-burst span:nth-child(4) { --bx: -14px; --by: 14px; }
+    @keyframes burst-fly {
+      0%   { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--bx), var(--by)) scale(0.4); opacity: 0; }
+    }
+    /* Touch/mobile: restore native cursor */
+    @media (pointer: coarse) {
+      *, *::before, *::after,
+      a, button, [role="button"], .pixel-box, .player-card, .start-btn, .profile-btn,
+      .quest, .qbtn, .node, .nav a, .mini, label[for] { cursor: auto; }
+    }
+
+    /* ============================================================
        TOKENS
     ============================================================ */
     :root {
@@ -910,6 +949,24 @@
         else { cancelAnimationFrame(raf); raf = null; }
       }, { threshold: 0 });
       cObs.observe(section);
+    })();
+  </script>
+
+  <!-- ============================================================
+       CLICK BURST EFFECT (pixel squares fly outward)
+  ============================================================ -->
+  <script>
+    (function clickBurst() {
+      // Skip on touch devices
+      if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
+      window.addEventListener('mousedown', (e) => {
+        const burst = document.createElement('div');
+        burst.className = 'click-burst';
+        burst.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+        burst.innerHTML = '<span></span><span></span><span></span><span></span>';
+        document.body.appendChild(burst);
+        setTimeout(() => burst.remove(), 320);
+      });
     })();
   </script>
 </html>
