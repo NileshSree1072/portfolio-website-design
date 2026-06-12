@@ -413,6 +413,109 @@
       .nav-toggle { display: block; }
       nav .xp { display: none; }
     }
+
+    /* ============================================================
+       SCROLL COMPANION SAMURAI
+    ============================================================ */
+    .companion-container {
+      position: fixed;
+      bottom: 40px;
+      left: 30px;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .companion-bubble {
+      background: #0a0e1a;
+      border: 2px solid #00d4ff;
+      padding: 8px 10px;
+      font-family: var(--font-px);
+      font-size: 6px;
+      color: #00d4ff;
+      max-width: 140px;
+      line-height: 1.8;
+      text-align: center;
+      white-space: pre-line;
+      margin-bottom: 6px;
+      position: relative;
+      transition: opacity 0.2s ease;
+    }
+    .companion-bubble::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #00d4ff;
+    }
+    .companion-sprite {
+      width: 96px;
+      height: 96px;
+      pointer-events: auto;
+      cursor: pointer;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      mix-blend-mode: screen;
+      transform-origin: center bottom;
+      background-repeat: no-repeat;
+      background-size: auto 96px;
+      position: relative;
+    }
+    .companion-xp-toast {
+      position: absolute;
+      bottom: 96px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #f5c518;
+      font-family: var(--font-px);
+      font-size: 7px;
+      pointer-events: none;
+      animation: companion-float 1s ease-out forwards;
+    }
+    @keyframes companion-float {
+      from { transform: translate(-50%, 0); opacity: 1; }
+      to   { transform: translate(-50%, -30px); opacity: 0; }
+    }
+
+    .anim-idle {
+      background-image: url('/sprites/IDLE.png');
+      animation: play-idle 1s steps(10) infinite;
+    }
+    @keyframes play-idle {
+      from { background-position: 0px 0px; }
+      to   { background-position: -960px 0px; }
+    }
+    .anim-run {
+      background-image: url('/sprites/RUN.png');
+      animation: play-run 0.8s steps(16) infinite;
+    }
+    @keyframes play-run {
+      from { background-position: 0px 0px; }
+      to   { background-position: -1536px 0px; }
+    }
+    .anim-attack {
+      background-image: url('/sprites/ATTACK_1.png');
+      animation: play-attack 0.7s steps(7) forwards;
+    }
+    @keyframes play-attack {
+      from { background-position: 0px 0px; }
+      to   { background-position: -672px 0px; }
+    }
+    .anim-hurt {
+      background-image: url('/sprites/HURT.png');
+      animation: play-hurt 0.4s steps(4) forwards;
+    }
+    @keyframes play-hurt {
+      from { background-position: 0px 0px; }
+      to   { background-position: -384px 0px; }
+    }
+
+    @media (max-width: 768px) {
+      .companion-container { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -632,6 +735,16 @@
   </section>
 
   <footer>© 2026 NILESH — PRESS START TO CONTINUE</footer>
+
+  <!-- ============================================================
+       SCROLL COMPANION SAMURAI
+  ============================================================ -->
+  <div class="companion-container" id="companion">
+    <div class="companion-bubble" id="companionBubble">ANOTHER WARRIOR
+ARRIVES...
+WELCOME. ⚔️</div>
+    <div class="companion-sprite anim-idle" id="companionSprite" aria-label="Samurai companion"></div>
+  </div>
 
   <script>
     /* ---------- LOADER ---------- */
@@ -1104,6 +1217,179 @@
         document.body.appendChild(burst);
         setTimeout(() => burst.remove(), 320);
       });
+    })();
+  </script>
+
+  <!-- ============================================================
+       SCROLL COMPANION SAMURAI — LOGIC
+  ============================================================ -->
+  <script>
+    (function companion() {
+      const sprite = document.getElementById('companionSprite');
+      const bubble = document.getElementById('companionBubble');
+      if (!sprite || !bubble) return;
+      // Skip entirely on mobile (container is hidden via CSS)
+      if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) return;
+
+      let lastScrollY = window.scrollY;
+      let scrollTimeout = null;
+      let scrollDirection = 'down';
+      let isAttacking = false;
+      let currentSection = 'hero';
+      let bottomReached = false;
+      let topReached = true;
+
+      const DIALOGUE = {
+        hero: {
+          down: 'ANOTHER WARRIOR\nARRIVES...\nWELCOME. ⚔️',
+          up:   'BACK TO THE\nBEGINNING?\nHONORABLE.'
+        },
+        skills: {
+          down: 'THESE ARE MY\nWEAPONS. FORGED\nOVER 4 YEARS.',
+          up:   'RE-INSPECTING\nTHE ARSENAL?\nWISE MOVE.'
+        },
+        training: {
+          down: '320+ PROBLEMS\nSLAIN. THE\nGRIND IS REAL.',
+          up:   'THE GRIND\nNEVER STOPS.\nEVEN IN RETREAT.'
+        },
+        quests: {
+          down: 'EVERY QUEST\nMADE ME\nSTRONGER.',
+          up:   'REVISITING\nPAST BATTLES?\nGOOD STRATEGY.'
+        },
+        achievements: {
+          down: 'THESE HONORS?\nEARNED IN\nBATTLE.',
+          up:   'THE HALL OF\nFAME NEVER\nFADES. 🏆'
+        },
+        contact: {
+          down: 'YOU REACHED\nTHE END.\nNOW HIRE ME. 😤',
+          up:   'CHANGED YOUR\nMIND? THE\nSAMURAI WAITS.'
+        }
+      };
+
+      const QUOTES = [
+        "IT'S NOT A BUG.\nIT'S AN\nUNDOCUMENTED\nFEATURE. 🐛",
+        "99 BUGS...\n*FIX ONE*\n127 BUGS. 💀",
+        "WHY DOES IT\nWORK? NO IDEA.\nDON'T TOUCH IT.",
+        "STACKOVERFLOW\nIS DOWN.\nI AM NOTHING.",
+        "SLEEP IS JUST\nA SLOW REBOOT. 💤",
+        "GIT BLAME:\nIT WAS ME.\nALWAYS ME.",
+        "SHIPPING 2AM\nBUILDS\nCHARACTER. 🚀",
+        "COMPILING...\n*MAKES COFFEE*\n*STILL COMPILING*",
+        "THE SAMURAI\nCODES AT\nMIDNIGHT. ⚔️",
+        "400 LEETCODE\nPROBLEMS AND\nSTILL GOING."
+      ];
+
+      function setAnim(state) {
+        sprite.className = 'companion-sprite anim-' + state;
+      }
+
+      function setBubble(text) {
+        bubble.style.opacity = '0';
+        setTimeout(() => {
+          bubble.textContent = text;
+          bubble.style.opacity = '1';
+        }, 200);
+      }
+
+      function restoreSectionDialogue() {
+        const d = DIALOGUE[currentSection];
+        if (d) setBubble(d[scrollDirection] || d.down);
+      }
+
+      function spawnXpToast() {
+        const toast = document.createElement('div');
+        toast.className = 'companion-xp-toast';
+        toast.textContent = '+10 XP';
+        sprite.appendChild(toast);
+        setTimeout(() => toast.remove(), 1000);
+      }
+
+      /* ---------- SCROLL DIRECTION ---------- */
+      window.addEventListener('scroll', () => {
+        if (window.scrollY !== lastScrollY) {
+          scrollDirection = window.scrollY > lastScrollY ? 'down' : 'up';
+        }
+        lastScrollY = window.scrollY;
+
+        if (!isAttacking) {
+          sprite.style.transform = scrollDirection === 'down' ? 'scaleX(1)' : 'scaleX(-1)';
+          setAnim('run');
+        }
+
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          sprite.style.transform = 'scaleX(1)';
+          if (!isAttacking) setAnim('idle');
+        }, 150);
+
+        /* ---------- SPECIAL MOMENTS ---------- */
+        const max = document.body.scrollHeight - window.innerHeight;
+        // Reached bottom
+        if (window.scrollY >= max - 4) {
+          if (!bottomReached && !isAttacking) {
+            bottomReached = true;
+            playOneShot('attack', 'YOU MADE IT!\nNOW HIRE ME.\nI DARE YOU. 😤');
+          }
+        } else {
+          bottomReached = false;
+        }
+        // Back at top
+        if (window.scrollY <= 4) {
+          if (!topReached && !isAttacking) {
+            topReached = true;
+            playOneShot('hurt', 'BACK AT BASE.\nFULL HP. ❤️\nREADY TO FIGHT.');
+          }
+        } else {
+          topReached = false;
+        }
+      }, { passive: true });
+
+      function playOneShot(anim, text) {
+        isAttacking = true;
+        clearTimeout(scrollTimeout);
+        sprite.style.transform = 'scaleX(1)';
+        setAnim(anim);
+        setBubble(text);
+        const dur = anim === 'hurt' ? 400 : 700;
+        setTimeout(() => {
+          setAnim('idle');
+          isAttacking = false;
+        }, dur);
+        setTimeout(restoreSectionDialogue, 2500);
+      }
+
+      /* ---------- SECTION DIALOGUE ---------- */
+      const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+          if (en.isIntersecting) {
+            currentSection = en.target.id;
+            if (!isAttacking) restoreSectionDialogue();
+          }
+        });
+      }, { threshold: 0.4 });
+      Object.keys(DIALOGUE).forEach(id => {
+        const sec = document.getElementById(id);
+        if (sec) sectionObserver.observe(sec);
+      });
+
+      /* ---------- CLICK TO ATTACK ---------- */
+      sprite.addEventListener('click', () => {
+        if (isAttacking) return;
+        isAttacking = true;
+        sprite.style.transform = 'scaleX(1)';
+        setAnim('attack');
+        setBubble(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+        spawnXpToast();
+        setTimeout(() => {
+          setAnim('idle');
+          isAttacking = false;
+        }, 700);
+        setTimeout(restoreSectionDialogue, 2500);
+      });
+
+      /* ---------- INIT ---------- */
+      setAnim('idle');
+      restoreSectionDialogue();
     })();
   </script>
 </html>
